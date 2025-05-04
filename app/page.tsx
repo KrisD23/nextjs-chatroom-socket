@@ -11,9 +11,19 @@ const Home = () => {
     { sender: string; message: string }[]
   >([]);
   const [userName, setUserName] = useState("");
-  const handleSendMessage = (message: string) => console.log(message);
+  const handleSendMessage = (message: string) => {
+    const data = { room, message, sender: userName };
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { sender: userName, message },
+    ]);
+    socket.emit("message", data);
+  };
 
   useEffect(() => {
+    socket.on("message", (data) => {
+      setMessages((prevMessages) => [...prevMessages, data]);
+    });
     socket.on("user_joined", (message) => {
       setMessages((prevMessages) => [
         ...prevMessages,
@@ -37,7 +47,7 @@ const Home = () => {
     <div className="flex mt-24 justify-center w-full flex-col px-20">
       {!joined ? (
         <div className="flex w-full max-w-3xl mx-auto flex-col items-center">
-          <h1 className="mb-4 text-2xl font-bold">Join Room</h1>
+          <h1 className="mb-4 text-2xl font-bold">Room :{room}</h1>
           <input
             onChange={(e) => setUserName(e.target.value)}
             value={userName}

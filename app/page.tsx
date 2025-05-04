@@ -1,7 +1,8 @@
 "use client";
 import ChatForm from "@/components/ChatForm";
 import ChatMessage from "@/components/ChatMessage";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { socket } from "@/lib/socketClient";
 
 const Home = () => {
   const [room, setRoom] = useState("");
@@ -12,8 +13,24 @@ const Home = () => {
   const [userName, setUserName] = useState("");
   const handleSendMessage = (message: string) => console.log(message);
 
+  useEffect(() => {
+    socket.on("user_joined", (message) => {
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { sender: "System", message },
+      ]);
+    });
+
+    return () => {
+      socket.off("user_joined");
+      socket.off("message");
+    };
+  }, []);
   const handleJoinRoom = () => {
-    setJoined(true);
+    if (room && userName) {
+      socket.emit("join_room", { room, username: userName });
+      setJoined(true);
+    }
   };
 
   return (
@@ -23,14 +40,14 @@ const Home = () => {
           <h1 className="mb-4 text-2xl font-bold">Join Room</h1>
           <input
             onChange={(e) => setUserName(e.target.value)}
-            value={room}
+            value={userName}
             type="text"
             className="px-4 py-2 rounded border-2 flex-1"
             placeholder="Enter your username"
           />
           <input
             onChange={(e) => setRoom(e.target.value)}
-            value={userName}
+            value={room}
             type="text"
             className="px-4 py-2 rounded border-2 flex-1"
             placeholder="Enter room name/code"
